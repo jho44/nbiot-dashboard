@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import TableBody from './TableBody';
 import './App.css';
 
 function App() {
 
-  let [blocks, setBlocks] = useState(null)
+  let [blocksArr, setBlocksArr] = useState([]);
+  let [blocksList, setBlocksList] = useState([]);
+  let [smallestInd, setSmallestInd] = useState([0, 0]);
+  let [showEmpties, setShowEmpties] = useState(true);
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/blocks')
     .then(response => response.json())
-    .then(data => setBlocks(data))
+    .then(data => {
+      setBlocksArr(data['blocks_arr']);
+      setBlocksList(data['blocks_list']);
+      setSmallestInd(data['smallest_idx']);
+    })
   }, []);
 
   return (
@@ -16,45 +24,26 @@ function App() {
       <h2>NB-IoT Dashboard</h2>
       <p>Shows airtime of DL/UL Transport and DCI Samples/Records</p>
 
-      <table className='w3-table w3-hoverable w3-striped w3-border w3-bordered w3-centered'>
+      <div id='toggle-btn'>
+        <button onClick={() => setShowEmpties(!showEmpties)}>{`Show ${showEmpties ? 'only non-empty' : 'all'} rows`}</button>
+      </div>
+      <table className='w3-table w3-hoverable w3-bordered w3-border w3-centered'>
         <thead>
           <tr>
-            <th>Timestamp</th>
+            <th>HSFN</th>
             <th>FN</th>
             <th>Sub-FN</th>
             {Array.apply(null, Array(9)).map((_, i) => (
               <th key={i}></th>
             ))}
           </tr>
-          <tr>
+          <tr id="hdr-btm-row">
           {['', '', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((colContent, i) => (
             <th key={i}>{colContent}</th>
           ))}
           </tr>
         </thead>
-        <tbody>
-          {blocks && blocks.map((block, i) => {
-            let blockStart = null;
-            return (
-              <tr key={i}>
-                <td>{block['timestamp']}</td>
-                <td>{block['FN']}</td>
-                {
-                  Array.apply(null, Array(10)).map((_, j) => {
-                    blockStart = blockStart > 0 && blockStart - 1;
-                    if (j === block['Sub-FN']) {
-                      blockStart = block['airtime'];
-                      return (<td key={j} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}>{block['type']}</td>);
-                    }
-                    else {
-                      return (<td key={j} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}></td>);
-                    }
-                  })
-                }
-              </tr>
-            );
-          })}
-        </tbody>
+        <TableBody blocks={showEmpties ? blocksArr : blocksList} smallestInd={smallestInd} showEmpties={showEmpties} />
       </table>
     </div>
   );
