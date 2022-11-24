@@ -1,3 +1,25 @@
+/* --------------- https://codepen.io/joykureel/pen/RXKRqv?editors=0110 --------------- */
+.modal-relevance{
+  position:relative;
+  padding:0 80px;
+}
+.modal-list{
+  position:absolute;
+  box-sizing: border-box;
+  overflow-y:scroll;
+  max-height:150px;
+  width:250px;
+  top:100%;
+  right:0%;
+  z-index:5;
+  background:white;
+  padding:10px;
+  border:1px solid grey;
+  box-shadow: 0 0 2px 2px grey;
+}
+
+/* --------------------------------------------------------------------------- */
+
 #toggle-btn {
   position: sticky;
   top: 0px;
@@ -7,12 +29,14 @@
   align-items: center;
   background-color: rgb(161, 161, 255);
   border-radius: 5px;
+  z-index: 10;
 }
 
 thead {
   position: sticky;
   top: 28.5px;
   margin: 0 0 0 0;
+  z-index: 10;
 }
 td {
   border-right: 1px solid #ccc;

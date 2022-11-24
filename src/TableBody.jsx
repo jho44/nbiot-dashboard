@@ -2,6 +2,8 @@
 import React from "react";
 import throttle from "lodash.throttle";
 
+import Modal from "./Modal";
+
 const itemRowHeight = 32; // same height as each row (32px, see styles.css)
 const screenHeight = Math.max(
   document.documentElement.clientHeight,
@@ -88,6 +90,7 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
       const sfn = (smallestInd + i) % 1024;
 
       if (row) {
+        let lastBlock = null;
         rows.push(
           <tr key={i}>
             <td>{hsfn}</td>
@@ -95,11 +98,17 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
             {row.map((block, j) => {
                 blockStart = blockStart > 0 && blockStart - 1;
                 if (block !== null) {
+                  lastBlock = block;
                   blockStart = block['airtime'];
-                  return (<td key={j} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}>{block['type']}</td>);
-                }
-                else {
-                  return (<td key={j} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}></td>);
+                  return (
+                    <Modal ind={j} key={j} block={block} />
+                  );
+                } else if (blockStart) {
+                  return (
+                    <Modal ind={j} key={j} block={lastBlock} />
+                  );
+                } else {
+                  return (<td key={j}></td>);
                 }
             })}
           </tr>
@@ -114,17 +123,22 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
             <td>{row['SFN']}</td>
             {Array.apply(null, Array(10)).map((_, k) => {
               blockStart = blockStart > 0 && blockStart - 1;
-              if (j >= row['blocks'].length) return (<td key={k} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}></td>);
+              if (j >= row['blocks'].length) {
+                // there's no more blocks in this row but the remaining ones must either be pink (for remaining airtime) or empty
+                if (blockStart) return (<Modal ind={k} key={k} block={row['blocks'][j-1]} />);
+                else return (<td key={k}></td>);
+              }
 
               const block = row['blocks'][j];
 
               if (k === block['Sub-FN']) {
                 blockStart = block['airtime'];
                 j += 1;
-                return (<td key={k} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}>{block['type']}</td>);
-              }
-              else {
-                return (<td key={k} style={{ backgroundColor: blockStart && "pink", borderRight: blockStart ? "none" : "1px solid #ccc" }}></td>);
+                return (<Modal ind={k} key={k} block={block} />);
+              } else if (blockStart) {
+                return (<Modal ind={k} key={k} block={row['blocks'][j-1]} />);
+              } else {
+                return (<td key={k}></td>);
               }
             })}
           </tr>
