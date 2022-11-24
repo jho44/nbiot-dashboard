@@ -6,12 +6,22 @@ function Modal({ ind, block }) {
   const [content, setContent] = useState(null);
 
   function renderModal() {
-    if (block['type'] === 'DL-DCI')
+    if (block["type"] === "DL-DCI")
       return (
         <div className="modal-list">
           {Object.entries(block).map(([key, value], i) => {
-            if (key !== 'SFN' && key !== 'Sub-FN' && key !== 'HSFN' && key !== 'airtime' && key !== 'type')
-              return (<div key={i}>{key}: {value}</div>);
+            if (
+              key !== "SFN" &&
+              key !== "Sub-FN" &&
+              key !== "HSFN" &&
+              key !== "airtime" &&
+              key !== "type"
+            )
+              return (
+                <div key={i}>
+                  {key}: {value}
+                </div>
+              );
           })}
         </div>
       );
@@ -19,31 +29,35 @@ function Modal({ ind, block }) {
       return (
         <div className="modal-list">
           {Object.entries(block).map(([key, value], i) => {
-            if (key !== 'Mac Hdr + CE' && key !== 'airtime' && key !== 'type')
-              return (<div key={i}>{key}: {value}</div>);
+            if (key !== "Mac Hdr + CE" && key !== "airtime" && key !== "type")
+              return (
+                <div key={i}>
+                  {key}: {value}
+                </div>
+              );
           })}
         </div>
-      )
+      );
   }
   const handleLeave = () => {
     return setContent(null);
   };
 
   const handleHover = () => {
-    return setContent(renderModal())
+    return setContent(renderModal());
   };
 
-  return(
+  return (
     <td
       style={{ backgroundColor: "pink", borderRight: "none" }}
       className="modal-relevance"
       onMouseOver={handleHover}
       onMouseLeave={handleLeave}
     >
-      {ind === block['Sub-FN'] && block['type']}
+      {ind === block["Sub-FN"] && block["type"]}
       {content}
     </td>
-  )
+  );
 }
 
 export default Modal;

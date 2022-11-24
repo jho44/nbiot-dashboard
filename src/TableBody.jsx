@@ -65,12 +65,12 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
     // for simplicity, scroll back to top of page when toggle b/t showing empty rows
     window.scrollTo({
       top: 0,
-      behavior: 'auto'
+      behavior: "auto",
     });
     setScrollPosition(0);
     setDisplayStart(0);
     setDisplayStart(0);
-  }, [showEmpties])
+  }, [showEmpties]);
 
   // add a filler row at the top. The further down we scroll the taller this will be
   rows.push(
@@ -96,20 +96,16 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
             <td>{hsfn}</td>
             <td>{sfn}</td>
             {row.map((block, j) => {
-                blockStart = blockStart > 0 && blockStart - 1;
-                if (block !== null) {
-                  lastBlock = block;
-                  blockStart = block['airtime'];
-                  return (
-                    <Modal ind={j} key={j} block={block} />
-                  );
-                } else if (blockStart) {
-                  return (
-                    <Modal ind={j} key={j} block={lastBlock} />
-                  );
-                } else {
-                  return (<td key={j}></td>);
-                }
+              blockStart = blockStart > 0 && blockStart - 1;
+              if (block !== null) {
+                lastBlock = block;
+                blockStart = block["airtime"];
+                return <Modal ind={j} key={j} block={block} />;
+              } else if (blockStart) {
+                return <Modal ind={j} key={j} block={lastBlock} />;
+              } else {
+                return <td key={j}></td>;
+              }
             })}
           </tr>
         );
@@ -119,26 +115,27 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
       if (row) {
         rows.push(
           <tr key={i}>
-            <td>{row['HSFN']}</td>
-            <td>{row['SFN']}</td>
+            <td>{row["HSFN"]}</td>
+            <td>{row["SFN"]}</td>
             {Array.apply(null, Array(10)).map((_, k) => {
               blockStart = blockStart > 0 && blockStart - 1;
-              if (j >= row['blocks'].length) {
+              if (j >= row["blocks"].length) {
                 // there's no more blocks in this row but the remaining ones must either be pink (for remaining airtime) or empty
-                if (blockStart) return (<Modal ind={k} key={k} block={row['blocks'][j-1]} />);
-                else return (<td key={k}></td>);
+                if (blockStart)
+                  return <Modal ind={k} key={k} block={row["blocks"][j - 1]} />;
+                else return <td key={k}></td>;
               }
 
-              const block = row['blocks'][j];
+              const block = row["blocks"][j];
 
-              if (k === block['Sub-FN']) {
-                blockStart = block['airtime'];
+              if (k === block["Sub-FN"]) {
+                blockStart = block["airtime"];
                 j += 1;
-                return (<Modal ind={k} key={k} block={block} />);
+                return <Modal ind={k} key={k} block={block} />;
               } else if (blockStart) {
-                return (<Modal ind={k} key={k} block={row['blocks'][j-1]} />);
+                return <Modal ind={k} key={k} block={row["blocks"][j - 1]} />;
               } else {
-                return (<td key={k}></td>);
+                return <td key={k}></td>;
               }
             })}
           </tr>

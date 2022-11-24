@@ -7,12 +7,12 @@ from flask_cors import CORS, cross_origin
 app = Flask(__name__)
 
 cors = CORS(app)
-app.config['CORS_HEADERS'] = 'blocks_arr-Type'
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route('/')
 @cross_origin()
 def home():
-  f = open('boop.json')
+  f = open('nas4-t1.json')
   raw_blocks = json.load(f)
   f.close()
 
