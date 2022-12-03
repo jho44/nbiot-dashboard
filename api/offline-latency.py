@@ -159,10 +159,12 @@ for packet in stats.all_blocks:
         if packet['type_id'] == 'UL Transport Sample':
             packet['transmission_condition'] = 1 if ul_NDI == -1 else (1 if packet['NDI'] != ul_NDI else 0)
             ul_NDI = packet['NDI']
+            for sample in packet['Mac Hdr + CE'] :
+                total_ul_bit += sample['BSR LCG 0 (bytes)'] if 'BSR LCG 0 (bytes)' in sample else 0
             if packet['Sub-FN'] in total_ul_Sub_FN :
                 total_ul_Sub_FN[packet['Sub-FN']] += 1 
             else:
-                    total_ul_Sub_FN[packet['Sub-FN']] = 1
+                total_ul_Sub_FN[packet['Sub-FN']] = 1
             print(packet,',')
 
 print("total_dl_bit: ", total_dl_bit)
