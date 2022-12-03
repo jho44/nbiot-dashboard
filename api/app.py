@@ -1,5 +1,5 @@
 import json
-import datetime
+from datetime import datetime
 
 from flask import Flask
 from flask import jsonify
@@ -12,11 +12,11 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 @app.route('/')
 @cross_origin()
 def home():
-  f = open('nas4-t1.json')
+  f = open('boop.json')
   raw_blocks = json.load(f)
   f.close()
 
-  return get_resource_assignments(raw_blocks)
+  return raw_blocks
 
 airtime = {
   0: 1,
@@ -142,7 +142,7 @@ def get_resource_assignments(blocks):
   for block in blocks:
     if block['type_id'] == 'LTE_NB1_ML1_GM_DCI_Info':
       for record in block['Records']:
-        record['timestamp'] = eval(block['timestamp']) if type(block['timestamp']) == str else block['timestamp']
+        record['timestamp'] = datetime.strptime(block['timestamp'], '%Y-%m-%d %H:%M:%S.%f') if type(block['timestamp']) == str else block['timestamp']
         frame_num = record['NPDCCH Timing SFN'] * 10 + record['NPDCCH Timing Sub FN']
         if record['RNTI Type'] != 'SI-RNTI':
           end_frame_num = frame_num + 10
@@ -208,7 +208,7 @@ def get_resource_assignments(blocks):
                 break
     else: # block['type_id'] == 'LTE_MAC_DL_Transport_Block' or 'LTE_MAC_UL_Transport_Block'
       for packet in block['Subpackets']:
-        block['timestamp'] = eval(block['timestamp'])
+        block['timestamp'] = datetime.strptime(block['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
         for sample in packet['Samples']:
           sample['timestamp'] = block['timestamp']
           SFN = sample['Sub-FN']
