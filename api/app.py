@@ -151,7 +151,7 @@ def get_resource_assignments(blocks):
               dci_dl_records_not_found[frame_num] = [record]
             else:
               dci_dl_records_not_found[frame_num].append(record)
-    else: # block['type_id'] == 'LTE_MAC_DL_Transport_Block' or 'LTE_MAC_UL_Transport_Block'
+    elif block['type_id'] == 'LTE_MAC_DL_Transport_Block' or block['type_id'] == 'LTE_MAC_UL_Transport_Block':
       for packet in block['Subpackets']:
         block['timestamp'] = datetime.strptime(block['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
         for sample in packet['Samples']:
@@ -238,8 +238,15 @@ def get_resource_assignments(blocks):
               dl_samples_not_found[fn] = [sample]
             else:
               dl_samples_not_found[fn].append(sample)
-
-            # print(dl_samples_not_found)
+    else: # block['type_id'] == 'LTE_NB1_ML1_GM_TX_Report'
+      for record in block['Records']:
+        if record['NPUSCH Format'] == 'Format 2': # the ACKs/NACKs
+          record['airtime'] = 1
+          record['HSFN'] = record['NPDCCH Timing HSFN']
+          record['SFN'] = record['NPDCCH Timing SFN']
+          record['Sub-FN'] = record['NPDCCH Timing Sub FN']
+          record['type'] = record['ACK NACK']
+          found_samples.append(record)
 
   """
   slap found_samples into 2D array
