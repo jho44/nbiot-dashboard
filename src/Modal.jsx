@@ -49,7 +49,7 @@ function Modal({ ind, block }) {
 
   function determineColor() {
     // DCI block
-    if (block["tx-success"] == undefined) return "pink";
+    if (block["tx-success"] === undefined) return "pink";
 
     if (block["tx-success"]) return "#ffe8bf"; // biege
     return "brown";
@@ -60,7 +60,7 @@ function Modal({ ind, block }) {
       style={{
         backgroundColor: determineColor(),
         borderRight: "none",
-        color: determineColor() == "brown" && "white",
+        color: determineColor() === "brown" && "white",
       }}
       className="modal-relevance"
       onMouseOver={handleHover}

@@ -32,7 +32,7 @@
 #toggle-btn {
   position: sticky;
   top: 0px;
-  height: 180px;
+  height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -44,7 +44,7 @@
 
 thead {
   position: sticky;
-  top: 180px;
+  top: 300px;
   margin: 0 0 0 0;
   z-index: 10;
 }
