@@ -40,91 +40,19 @@ def blocks():
 
     blocks = get_resource_assignments(raw_blocks)
     return blocks
-    '''
-    wanna return list of samples and records, where each has the form:
-    {
-      'type': 'DL-DCI', # one of ['DL-DCI', 'DL-DATA', 'UL-DATA']
-      'timestamp': datetime.datetime(1980, 1, 6, 0, 3, 8, 440769),
-      'FN': 2,
-      'Sub-FN': 2,
-      'HSFN': 4,
-      'airtime': airtime[resource_assignment]
-    }
-    '''
-
-    blocks_arr = []
-
-    for block in stuff['found_samples']:
-      type_id = 'LTE_MAC_UL_Transport_Block'
-      if 'DL TBS (bytes)' in block:
-        type_id = 'LTE_MAC_DL_Transport_Block'
-      elif 'DCI Repetition Number' in block:
-        type_id = 'LTE_NB1_ML1_GM_DCI_Info'
-      if type_id == 'LTE_MAC_DL_Transport_Block' or type_id == 'LTE_MAC_UL_Transport_Block':
-        blocks_arr.append({
-          'type': 'DL-DATA' if type_id == 'LTE_MAC_DL_Transport_Block' else 'UL-DATA',
-          'timestamp': block['timestamp'].strftime('%m/%d/%Y %H:%M:%S.%f'),
-          'FN': block['SFN'],
-          'Sub-FN': block['Sub-FN'],
-          'HSFN': block['NPDCCH Timing HSFN'],
-          'airtime': airtime[block['Resource Assignment']] # TODO: add Resource Assignment to decoded DL blocks
-        })
-      else: # LTE_NB1_ML1_GM_DCI_Info
-        blocks_arr.append({
-          'type': 'DL-DCI',
-          'timestamp': block['timestamp'].strftime('%m/%d/%Y %H:%M:%S.%f'),
-          'FN': block['NPDCCH Timing SFN'],
-          'Sub-FN': block['NPDCCH Timing Sub FN'],
-          'HSFN': block['NPDCCH Timing HSFN'],
-          'airtime': airtime[block['Resource Assignment']] # TODO: add Resource Assignment to decoded DL blocks
-        })
-
-    return blocks_arr
-
-# {
-#   'log_msg_len': 40,
-#   'type_id': 'LTE_MAC_DL_Transport_Block',
-#   'timestamp': datetime.datetime(1980, 1, 6, 0, 3, 9, 241346),
-#   'Version': 1,
-#   'Num SubPkt': 1,
-#   'Subpackets': [
-#     {
-#       'SubPacket ID': 'DL Transport Block',
-#       'Version': 2,
-#       'SubPacket Size': 24,
-#       'Num Samples': 1,
-#       'Samples': [
-#         {
-#           'Sub-FN': 3,
-#           'SFN': 318,
-#           'RNTI Type': 'C-RNTI',
-#           'HARQ ID': 0,
-#           'Area ID': 0,
-#           'PMCH ID': 0,
-#           'DL TBS (bytes)': 85,
-#           'RLC PDUs': 2,
-#           'Padding (bytes)': 1,
-#           'HDR LEN': 5,
-#           'Mac Hdr + CE': [
-#             {'Header Field': 35, 'LC ID': '3', 'Len': 2}, {'Header Field': 35, 'LC ID': '3', 'Len': 77}, {'Header Field': 31, 'LC ID': 'Padding', 'Len': -1}]}]}]}
-
-
-# {'log_msg_len': 32, 'type_id': 'LTE_NB1_ML1_GM_DCI_Info', 'timestamp': 'datetime.datetime(1980, 1, 6, 0, 3, 9, 829344)', 'Version': 3, 'Num of Records': 2, 'Records': [
-#   {'NPDCCH Timing HSFN': 19, 'NPDCCH Timing SFN': 317, 'NPDCCH Timing Sub FN': 6, 'RNTI Type Data': 1, 'RNTI Type': 'C-RNTI', 'UL Grant Present': 'False', 'DL Grant Present': 'True', 'PDCCH Order Present': 'False', 'NDI': 0, 'Reserved': 0, 'SC Index': 0, 'Redundancy Version': 0, 'Resource Assignment': 2, 'Scheduling Delay': 0, 'MCS': 12, 'Repetition Number': 0, 'DCI Repetition Number': 0, 'HARQ Resource': 1, 'Reserved2': 0},
-#   {'NPDCCH Timing HSFN': 19, 'NPDCCH Timing SFN': 320, 'NPDCCH Timing Sub FN': 8, 'RNTI Type Data': 1, 'RNTI Type': 'C-RNTI', 'UL Grant Present': 'True', 'DL Grant Present': 'False', 'PDCCH Order Present': 'False', 'NDI': 0, 'Reserved': 0, 'SC Index': 18, 'Redundancy Version': 0, 'Resource Assignment': 3, 'Scheduling Delay': 0, 'MCS': 9, 'Repetition Number': 0, 'DCI Repetition Number': 0, 'HARQ Resource': 0, 'Reserved2': 0}]}
 
 def update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, curr_hsfn, curr_fn):
   if greatest_HSFN_and_FN_pair[0] < curr_hsfn:
     greatest = [curr_hsfn, curr_fn]
-  elif greatest_HSFN_and_FN_pair[1] < curr_fn:
-    greatest = [greatest_HSFN_and_FN_pair[0], curr_fn]
+  elif greatest_HSFN_and_FN_pair[0] == curr_hsfn and greatest_HSFN_and_FN_pair[1] < curr_fn:
+    greatest = [curr_hsfn, curr_fn]
   else:
     greatest = greatest_HSFN_and_FN_pair
 
   if smallest_HSFN_and_FN_pair[0] > curr_hsfn:
     least = [curr_hsfn, curr_fn]
-  elif smallest_HSFN_and_FN_pair[1] > curr_fn:
-    least = [smallest_HSFN_and_FN_pair[0], curr_fn]
+  elif smallest_HSFN_and_FN_pair[0] == curr_hsfn and smallest_HSFN_and_FN_pair[1] > curr_fn:
+    least = [curr_hsfn, curr_fn]
   else:
     least = smallest_HSFN_and_FN_pair
 
@@ -133,6 +61,9 @@ def update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_
 def get_resource_assignments(blocks):
   dl_samples_not_found = {}
   ul_samples_not_found = {}
+
+  dci_dl_records_not_found = {}
+  dci_ul_records_not_found = {}
   found_samples = []
 
   # to figure out size of 2D array
@@ -206,14 +137,94 @@ def get_resource_assignments(blocks):
                       del dl_samples_not_found[i][ind]
                     break
                 break
+
+          if record['UL Grant Present'] == 'True':
+            # means didn't find matching DL TRANSPORT BLOCK to this DCI record
+            if frame_num not in dci_ul_records_not_found:
+              dci_ul_records_not_found[frame_num] = [record]
+            else:
+              dci_ul_records_not_found[frame_num].append(record)
+          else:
+            # means didn't find matching DL TRANSPORT BLOCK to this DCI record
+            if frame_num not in dci_dl_records_not_found:
+              dci_dl_records_not_found[frame_num] = [record]
+            else:
+              dci_dl_records_not_found[frame_num].append(record)
     else: # block['type_id'] == 'LTE_MAC_DL_Transport_Block' or 'LTE_MAC_UL_Transport_Block'
       for packet in block['Subpackets']:
         block['timestamp'] = datetime.strptime(block['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
         for sample in packet['Samples']:
+          # print('sample: ', sample)
           sample['timestamp'] = block['timestamp']
           SFN = sample['Sub-FN']
           FN = sample['SFN']
           fn = FN * 10 + SFN
+
+          # checking to see whether Transport Block came after corresponding
+          # DCI record
+          start_fn = fn - 10
+
+          found_prev_dci_record = False
+
+          for i in range(start_fn, fn):
+            if block['type_id'] == 'LTE_MAC_UL_Transport_Block':
+              if i in dci_ul_records_not_found:
+                  # print("UPLINK")
+                  for ind, lost_sample in enumerate(dci_ul_records_not_found[i]):
+                    if (sample['timestamp'] - lost_sample['timestamp']).seconds == 0:
+                      sample['airtime'] = airtime[lost_sample['Resource Assignment']]
+                      sample['HSFN'] = lost_sample['NPDCCH Timing HSFN']
+                      sample['type'] = 'UL-DATA'
+                      found_samples.append(sample)
+
+                      lost_sample['airtime'] = 1
+                      lost_sample['HSFN'] = lost_sample['NPDCCH Timing HSFN']
+                      lost_sample['SFN'] = lost_sample['NPDCCH Timing SFN']
+                      lost_sample['Sub-FN'] = lost_sample['NPDCCH Timing Sub FN']
+                      lost_sample['type'] = 'DL-DCI'
+                      found_samples.append(lost_sample)
+
+                      greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair = update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, lost_sample['NPDCCH Timing HSFN'], lost_sample['NPDCCH Timing SFN'])
+                      greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair = update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, lost_sample['NPDCCH Timing HSFN'], sample['SFN'])
+
+                      if len(dci_ul_records_not_found[i]) == 1:
+                        del dci_ul_records_not_found[i]
+                      else:
+                        del dci_ul_records_not_found[i][ind]
+
+                      found_prev_dci_record = True
+                      break
+                  if found_prev_dci_record:
+                    continue
+            else:
+              if i in dci_dl_records_not_found:
+                  # print("DOWNLINK")
+                  for ind, lost_sample in enumerate(dci_dl_records_not_found[i]):
+                    if (sample['timestamp'] - lost_sample['timestamp']).seconds == 0:
+                      sample['airtime'] = airtime[lost_sample['Resource Assignment']]
+                      sample['HSFN'] = lost_sample['NPDCCH Timing HSFN']
+                      sample['type'] = 'DL-DATA'
+                      found_samples.append(sample)
+
+                      lost_sample['airtime'] = 1
+                      lost_sample['HSFN'] = lost_sample['NPDCCH Timing HSFN']
+                      lost_sample['SFN'] = lost_sample['NPDCCH Timing SFN']
+                      lost_sample['Sub-FN'] = lost_sample['NPDCCH Timing Sub FN']
+                      lost_sample['type'] = 'DL-DCI'
+                      found_samples.append(lost_sample)
+
+                      greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair = update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, lost_sample['NPDCCH Timing HSFN'], lost_sample['NPDCCH Timing SFN'])
+                      greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair = update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, lost_sample['NPDCCH Timing HSFN'], sample['SFN'])
+
+                      if len(dci_dl_records_not_found[i]) == 1:
+                        del dci_dl_records_not_found[i]
+                      else:
+                        del dci_dl_records_not_found[i][ind]
+                      found_prev_dci_record = True
+                      break
+                  if found_prev_dci_record:
+                    continue
+
           if block['type_id'] == 'LTE_MAC_UL_Transport_Block':
             if fn not in ul_samples_not_found:
               ul_samples_not_found[fn] = [sample]
@@ -221,7 +232,7 @@ def get_resource_assignments(blocks):
               ul_samples_not_found[fn].append(sample)
 
             # print(ul_samples_not_found.keys())
-          else:
+          else: # LTE_MAC_DL_TRANSPORT_Block
             if fn not in dl_samples_not_found:
               dl_samples_not_found[fn] = [sample]
             else:
@@ -234,10 +245,13 @@ def get_resource_assignments(blocks):
   rows are for HSFN+FN and columns are for Sub-FN
   """
 
-  # print(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair)
+  print(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair)
 
   smallest_idx = smallest_HSFN_and_FN_pair[0] * 1024 + smallest_HSFN_and_FN_pair[1]
-  num_rows = (greatest_HSFN_and_FN_pair[0] * 1024 + greatest_HSFN_and_FN_pair[1]) - smallest_idx + 1
+  num_rows = (greatest_HSFN_and_FN_pair[0] * 1024 + greatest_HSFN_and_FN_pair[1]) - smallest_idx + 2
+  # add 1 for greatest - smallest and add another 1 since HSFN and FN's smallest value is 1
+  # while lists index by 0
+
   blocks_arr = [[None]*10 for i in range(num_rows)]
   blocks_list = [{
     'SFN': found_samples[0]['SFN'],
