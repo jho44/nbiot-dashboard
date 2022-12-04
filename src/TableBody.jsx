@@ -80,63 +80,77 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
   );
 
   // add the rows to actually render
+  let blockStart = null;
+  let lastBlock = null;
   for (let i = displayStart; i < displayEnd; ++i) {
     const row = blocks[i];
-    let blockStart = null;
+    let rowContents = [];
 
     if (showEmpties) {
       const hsfn = Math.floor((smallestInd + i) / 1024);
       const sfn = (smallestInd + i) % 1024;
 
       if (row) {
-        let lastBlock = null;
+        for (let j = 0; j < row.length; j++) {
+          const block = row[j];
+          blockStart = blockStart > 0 && blockStart - 1;
+          if (block !== null) {
+            lastBlock = block;
+            blockStart = block["airtime"];
+            rowContents.push(<Modal ind={j} key={j} block={block} />);
+          } else if (blockStart) {
+            rowContents.push(<Modal ind={j} key={j} block={lastBlock} />);
+          } else {
+            rowContents.push(<td key={j}></td>);
+          }
+        }
+
         rows.push(
           <tr key={i}>
             <td>{hsfn}</td>
             <td>{sfn}</td>
-            {row.map((block, j) => {
-              blockStart = blockStart > 0 && blockStart - 1;
-              if (block !== null) {
-                lastBlock = block;
-                blockStart = block["airtime"];
-                return <Modal ind={j} key={j} block={block} />;
-              } else if (blockStart) {
-                return <Modal ind={j} key={j} block={lastBlock} />;
-              } else {
-                return <td key={j}></td>;
-              }
-            })}
+            {rowContents}
           </tr>
         );
       }
     } else {
       let j = 0;
       if (row) {
+        for (let k = 0; k < 10; k++) {
+          blockStart = blockStart > 0 && blockStart - 1;
+          if (j >= row["blocks"].length) {
+            // there's no more blocks in this row but the remaining ones must either be pink (for remaining airtime) or empty
+            if (blockStart && lastBlock["Sub-FN"] < k)
+              // if block's airtime transcends onto empty row, don't show that overflow
+              // but if its airtime transcends onto non-empty row, then overflow
+              rowContents.push(<Modal ind={k} key={k} block={lastBlock} />);
+            else rowContents.push(<td key={k}></td>);
+            continue;
+          }
+
+          const block = row["blocks"][j];
+
+          if (k === block["Sub-FN"]) {
+            lastBlock = block;
+            blockStart = block["airtime"];
+            j += 1;
+            rowContents.push(<Modal ind={k} key={k} block={block} />);
+          } else if (
+            blockStart &&
+            lastBlock["HSFN"] * 1024 + lastBlock["SFN"] ===
+              block["HSFN"] * 1024 + block["SFN"] + 1
+          ) {
+            rowContents.push(<Modal ind={k} key={k} block={lastBlock} />);
+          } else {
+            rowContents.push(<td key={k}></td>);
+          }
+        }
+
         rows.push(
           <tr key={i}>
             <td>{row["HSFN"]}</td>
             <td>{row["SFN"]}</td>
-            {Array.apply(null, Array(10)).map((_, k) => {
-              blockStart = blockStart > 0 && blockStart - 1;
-              if (j >= row["blocks"].length) {
-                // there's no more blocks in this row but the remaining ones must either be pink (for remaining airtime) or empty
-                if (blockStart)
-                  return <Modal ind={k} key={k} block={row["blocks"][j - 1]} />;
-                else return <td key={k}></td>;
-              }
-
-              const block = row["blocks"][j];
-
-              if (k === block["Sub-FN"]) {
-                blockStart = block["airtime"];
-                j += 1;
-                return <Modal ind={k} key={k} block={block} />;
-              } else if (blockStart) {
-                return <Modal ind={k} key={k} block={row["blocks"][j - 1]} />;
-              } else {
-                return <td key={k}></td>;
-              }
-            })}
+            {rowContents}
           </tr>
         );
       }
