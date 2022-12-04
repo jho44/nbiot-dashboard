@@ -47,9 +47,21 @@ function Modal({ ind, block }) {
     return setContent(renderModal());
   };
 
+  function determineColor() {
+    // DCI block
+    if (block["tx-success"] == undefined) return "pink";
+
+    if (block["tx-success"]) return "#ffe8bf"; // biege
+    return "brown";
+  }
+
   return (
     <td
-      style={{ backgroundColor: "pink", borderRight: "none" }}
+      style={{
+        backgroundColor: determineColor(),
+        borderRight: "none",
+        color: determineColor() == "brown" && "white",
+      }}
       className="modal-relevance"
       onMouseOver={handleHover}
       onMouseLeave={handleLeave}

@@ -12,7 +12,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 @app.route('/')
 @cross_origin()
 def home():
-  f = open('boop.json')
+  f = open('board.json')
   raw_blocks = json.load(f)
   f.close()
 
@@ -34,7 +34,7 @@ airtime = {
 def blocks():
 
     # Opening JSON file
-    f = open('boop.json')
+    f = open('board.json')
     raw_blocks = json.load(f)
     f.close()
 
@@ -97,7 +97,8 @@ def get_resource_assignments(blocks):
                     record['HSFN'] = record['NPDCCH Timing HSFN']
                     record['SFN'] = record['NPDCCH Timing SFN']
                     record['Sub-FN'] = record['NPDCCH Timing Sub FN']
-                    record['type'] = 'DL-DCI'
+                    record['type'] = 'UL-DCI'
+
                     found_samples.append(record)
 
                     greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair = update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, record['NPDCCH Timing HSFN'], record['NPDCCH Timing SFN'])
@@ -181,7 +182,7 @@ def get_resource_assignments(blocks):
                       lost_sample['HSFN'] = lost_sample['NPDCCH Timing HSFN']
                       lost_sample['SFN'] = lost_sample['NPDCCH Timing SFN']
                       lost_sample['Sub-FN'] = lost_sample['NPDCCH Timing Sub FN']
-                      lost_sample['type'] = 'DL-DCI'
+                      lost_sample['type'] = 'UL-DCI'
                       found_samples.append(lost_sample)
 
                       greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair = update_HSFN_and_FN_extremes(greatest_HSFN_and_FN_pair, smallest_HSFN_and_FN_pair, lost_sample['NPDCCH Timing HSFN'], lost_sample['NPDCCH Timing SFN'])
@@ -287,12 +288,45 @@ def get_resource_assignments(blocks):
 
   found_samples.sort(key=get_key)
 
-  for sample in found_samples:
+  # states for figuring out transmission success of each data unit
+  last_dl_NDI = -1
+  last_ul_NDI = -1
+  last_dl_inds = {}
+  last_ul_inds = {}
+
+  for ind, sample in enumerate(found_samples):
+    # print(sample['type'], sample['HSFN'], sample['SFN'])
 
     # print('x: ', sample['NPDCCH Timing HSFN'] * 1024 + sfn - smallest_idx)
     # print('y: ', sub_fn)
 
-    blocks_arr[sample['HSFN'] * 1024 + sample['SFN'] - smallest_idx][sample['Sub-FN']] = sample
+    # add transmission success data now that everything's sorted
+    if sample['type'] == 'UL-DCI':
+      if last_ul_NDI != -1 and 'blocks_arr_inds' in last_ul_inds: # if this isn't the first one we've found (which we can't have previous NDI info about)
+        NDI_diff = (1 if sample['NDI'] != last_ul_NDI else 0)
+        blocks_arr[last_ul_inds['blocks_arr_inds'][0]][last_ul_inds['blocks_arr_inds'][1]]['tx-success'] = NDI_diff # set the tx_success of the previous UL sample
+
+      last_ul_NDI = sample['NDI']
+      sample['type'] = 'DL-DCI' # set back to DL-DCI since all DCIs are technically all DL packets
+    elif sample['type'] == 'DL-DCI':
+      if last_dl_NDI != -1 and 'blocks_arr_inds' in last_dl_inds: # if this isn't the first one we've found (which we can't have previous NDI info about)
+        NDI_diff = (1 if sample['NDI'] != last_dl_NDI else 0)
+        blocks_arr[last_dl_inds['blocks_arr_inds'][0]][last_dl_inds['blocks_arr_inds'][1]]['tx-success'] = NDI_diff # set the tx_success of the previous UL sample
+
+      last_dl_NDI = sample['NDI']
+
+    if sample['type'] == 'UL-DATA':
+      last_ul_inds['blocks_list_ind'] = len(blocks_list) - 1
+    elif sample['type'] == 'DL-DATA':
+      last_dl_inds['blocks_list_ind'] = len(blocks_list) - 1
+
+    row = sample['HSFN'] * 1024 + sample['SFN'] - smallest_idx
+    col = sample['Sub-FN']
+    blocks_arr[row][col] = sample
+    if sample['type'] == 'UL-DATA':
+      last_ul_inds['blocks_arr_inds'] = (row, col)
+    elif sample['type'] == 'DL-DATA':
+      last_dl_inds['blocks_arr_inds'] = (row, col)
 
     if blocks_list[-1]['HSFN'] == sample['HSFN'] and blocks_list[-1]['SFN'] == sample['SFN']:
       blocks_list[-1]['blocks'].append(sample)
