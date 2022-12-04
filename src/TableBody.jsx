@@ -69,8 +69,7 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
     });
     setScrollPosition(0);
     setDisplayStart(0);
-    setDisplayStart(0);
-  }, [showEmpties]);
+  }, [showEmpties, blocks.length]);
 
   // add a filler row at the top. The further down we scroll the taller this will be
   rows.push(

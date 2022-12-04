@@ -5,7 +5,11 @@ import "./App.css";
 function App() {
   let [blocksArr, setBlocksArr] = useState([]);
   let [blocksList, setBlocksList] = useState([]);
-  let [smallestInd, setSmallestInd] = useState([0, 0]);
+  let [smallestInd, setSmallestInd] = useState(0);
+  let [greatestHSFNAndFNPair, setGreatestHSFNAndFNPair] = useState([0, 0]);
+  let [smallestHSFNAndFNPair, setSmallestHSFNAndFNPair] = useState([0, 0]);
+  let [start, setStart] = useState(0);
+  let [end, setEnd] = useState(0);
   let [showEmpties, setShowEmpties] = useState(true);
 
   useEffect(() => {
@@ -15,8 +19,61 @@ function App() {
         setBlocksArr(data["blocks_arr"]);
         setBlocksList(data["blocks_list"]);
         setSmallestInd(data["smallest_idx"]);
+        setGreatestHSFNAndFNPair(data["greatest_HSFN_and_FN_pair"]);
+        setSmallestHSFNAndFNPair(data["smallest_HSFN_and_FN_pair"]);
+
+        const smallest = data["smallest_HSFN_and_FN_pair"];
+        const greatest = data["greatest_HSFN_and_FN_pair"];
+        setStart(smallest[0] * 1024 + smallest[1]);
+        setEnd(greatest[0] * 1024 + greatest[1]);
       });
   }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let startHsfn = e.target[0].value;
+    let endHsfn = e.target[2].value;
+    let startFn = e.target[1].value;
+    let endFn = e.target[3].value;
+
+    // check input
+    if (
+      !startHsfn.length ||
+      !endHsfn.length ||
+      !startFn.length ||
+      !endFn.length
+    ) {
+      console.log("some empty input");
+      return; // todo: error handling
+    }
+
+    startHsfn = parseInt(startHsfn);
+    endHsfn = parseInt(endHsfn);
+    startFn = parseInt(startFn);
+    endFn = parseInt(endFn);
+
+    if (
+      startHsfn * 1024 + startFn <
+        smallestHSFNAndFNPair[0] * 1024 + smallestHSFNAndFNPair[1] ||
+      endHsfn * 1024 + endFn >
+        greatestHSFNAndFNPair[0] * 1024 + greatestHSFNAndFNPair[1]
+    ) {
+      // out of bounds
+      console.log("out of bounds");
+      console.log(
+        startHsfn * 1024 + startFn,
+        smallestHSFNAndFNPair[0] * 1024 + smallestHSFNAndFNPair[1]
+      );
+      console.log(
+        endHsfn * 1024 + endFn,
+        greatestHSFNAndFNPair[0] * 1024 + greatestHSFNAndFNPair[1]
+      );
+      return; // todo: error handling
+    }
+
+    setStart(startHsfn * 1024 + startFn);
+    setEnd(endHsfn * 1024 + endFn);
+  };
 
   return (
     <div className="w3-container">
@@ -24,6 +81,40 @@ function App() {
       <p>Shows airtime of DL/UL Transport and DCI Samples/Records</p>
 
       <div id="toggle-btn">
+        <p>
+          Note: The max (HSFN, FN) pair value is ({greatestHSFNAndFNPair[0]},{" "}
+          {greatestHSFNAndFNPair[1]}) and the min (HSFN, FN) pair value is (
+          {smallestHSFNAndFNPair[0]}, {smallestHSFNAndFNPair[1]}).
+        </p>
+        <form onSubmit={handleSubmit} id="hsfn-fn-form">
+          <div>
+            <label>Start HSFN:</label>
+            <input
+              type="number"
+              name="start-hsfn"
+              max={greatestHSFNAndFNPair[0]}
+              min={smallestHSFNAndFNPair[0]}
+            />
+
+            <label>Start FN:</label>
+            <input type="number" name="start_fn" max={1023} min={0} />
+
+            <label>End HSFN:</label>
+            <input
+              type="number"
+              name="end-hsfn"
+              max={greatestHSFNAndFNPair[0]}
+              min={smallestHSFNAndFNPair[0]}
+            />
+
+            <label>End FN:</label>
+            <input type="number" name="end_fn" max={1023} min={0} />
+          </div>
+          <button type="submit" id="update-time-range-btn">
+            Update Time Range
+          </button>
+        </form>
+
         <button onClick={() => setShowEmpties(!showEmpties)}>{`Show ${
           showEmpties ? "only non-empty" : "all"
         } rows`}</button>
@@ -45,8 +136,12 @@ function App() {
           </tr>
         </thead>
         <TableBody
-          blocks={showEmpties ? blocksArr : blocksList}
-          smallestInd={smallestInd}
+          blocks={
+            showEmpties
+              ? blocksArr.slice(start - smallestInd, end - smallestInd + 1)
+              : blocksList
+          }
+          smallestInd={start}
           showEmpties={showEmpties}
         />
       </table>

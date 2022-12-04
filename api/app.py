@@ -306,5 +306,7 @@ def get_resource_assignments(blocks):
   return jsonify({
     'blocks_arr': blocks_arr,
     'smallest_idx': smallest_idx,
-    'blocks_list': blocks_list
+    'blocks_list': blocks_list,
+    'greatest_HSFN_and_FN_pair': greatest_HSFN_and_FN_pair,
+    'smallest_HSFN_and_FN_pair': smallest_HSFN_and_FN_pair
   })

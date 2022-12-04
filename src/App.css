@@ -20,12 +20,22 @@
 
 /* --------------------------------------------------------------------------- */
 
+#update-time-range-btn {
+  margin-top: 1rem;
+}
+
+#hsfn-fn-form {
+  display: flex;
+  flex-direction: column;
+}
+
 #toggle-btn {
   position: sticky;
   top: 0px;
-  height: 28.5px;
+  height: 180px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: space-around;
   align-items: center;
   background-color: rgb(161, 161, 255);
   border-radius: 5px;
@@ -34,7 +44,7 @@
 
 thead {
   position: sticky;
-  top: 28.5px;
+  top: 180px;
   margin: 0 0 0 0;
   z-index: 10;
 }
