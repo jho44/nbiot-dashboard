@@ -43,8 +43,8 @@ function App() {
       !startFn.length ||
       !endFn.length
     ) {
-      console.log("some empty input");
-      return; // todo: error handling
+      window.alert("One of the time range fields is empty.");
+      return;
     }
 
     startHsfn = parseInt(startHsfn);
@@ -59,16 +59,10 @@ function App() {
         greatestHSFNAndFNPair[0] * 1024 + greatestHSFNAndFNPair[1]
     ) {
       // out of bounds
-      console.log("out of bounds");
-      console.log(
-        startHsfn * 1024 + startFn,
-        smallestHSFNAndFNPair[0] * 1024 + smallestHSFNAndFNPair[1]
+      window.alert(
+        "Either the start or end (HSFN, FN) is out of bounds of this dataset."
       );
-      console.log(
-        endHsfn * 1024 + endFn,
-        greatestHSFNAndFNPair[0] * 1024 + greatestHSFNAndFNPair[1]
-      );
-      return; // todo: error handling
+      return;
     }
 
     setStart(startHsfn * 1024 + startFn);
@@ -139,7 +133,10 @@ function App() {
           blocks={
             showEmpties
               ? blocksArr.slice(start - smallestInd, end - smallestInd + 1)
-              : blocksList
+              : blocksList.filter((block) => {
+                  const fn = block.HSFN * 1024 + block.SFN;
+                  return fn >= start && fn <= end;
+                })
           }
           smallestInd={start}
           showEmpties={showEmpties}
