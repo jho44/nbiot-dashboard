@@ -260,13 +260,6 @@ def get_resource_assignments(blocks):
   # add 1 for greatest - smallest and add another 1 since HSFN and FN's smallest value is 1
   # while lists index by 0
 
-  blocks_arr = [[None]*10 for i in range(num_rows)]
-  blocks_list = [{
-    'SFN': found_samples[0]['SFN'],
-    'HSFN': found_samples[0]['HSFN'],
-    'blocks': []
-  }]
-
   """
   each entry in blocks_list will correspond to a HSFN and FN key pair and look like
   {
@@ -295,6 +288,13 @@ def get_resource_assignments(blocks):
 
   found_samples.sort(key=get_key)
 
+  blocks_arr = [[None]*10 for i in range(num_rows)]
+  blocks_list = [{
+    'SFN': found_samples[0]['SFN'],
+    'HSFN': found_samples[0]['HSFN'],
+    'blocks': []
+  }]
+
   # states for figuring out transmission success of each data unit
   last_dl_NDI = -1
   last_ul_NDI = -1
@@ -312,20 +312,15 @@ def get_resource_assignments(blocks):
       if last_ul_NDI != -1 and 'blocks_arr_inds' in last_ul_inds: # if this isn't the first one we've found (which we can't have previous NDI info about)
         NDI_diff = (1 if sample['NDI'] != last_ul_NDI else 0)
         blocks_arr[last_ul_inds['blocks_arr_inds'][0]][last_ul_inds['blocks_arr_inds'][1]]['tx-success'] = NDI_diff # set the tx_success of the previous UL sample
-
+        blocks_list[last_ul_inds['blocks_list_ind'][0]]['blocks'][last_ul_inds['blocks_list_ind'][1]]['tx-success'] = NDI_diff
       last_ul_NDI = sample['NDI']
       sample['type'] = 'DL-DCI' # set back to DL-DCI since all DCIs are technically all DL packets
     elif sample['type'] == 'DL-DCI':
       if last_dl_NDI != -1 and 'blocks_arr_inds' in last_dl_inds: # if this isn't the first one we've found (which we can't have previous NDI info about)
         NDI_diff = (1 if sample['NDI'] != last_dl_NDI else 0)
         blocks_arr[last_dl_inds['blocks_arr_inds'][0]][last_dl_inds['blocks_arr_inds'][1]]['tx-success'] = NDI_diff # set the tx_success of the previous UL sample
-
+        blocks_list[last_dl_inds['blocks_list_ind'][0]]['blocks'][last_dl_inds['blocks_list_ind'][1]]['tx-success'] = NDI_diff
       last_dl_NDI = sample['NDI']
-
-    if sample['type'] == 'UL-DATA':
-      last_ul_inds['blocks_list_ind'] = len(blocks_list) - 1
-    elif sample['type'] == 'DL-DATA':
-      last_dl_inds['blocks_list_ind'] = len(blocks_list) - 1
 
     row = sample['HSFN'] * 1024 + sample['SFN'] - smallest_idx
     col = sample['Sub-FN']
@@ -343,6 +338,11 @@ def get_resource_assignments(blocks):
         'HSFN': sample['HSFN'],
         'blocks': [sample]
       })
+
+    if sample['type'] == 'UL-DATA':
+      last_ul_inds['blocks_list_ind'] = (len(blocks_list) - 1, len(blocks_list[-1]['blocks']) - 1)
+    elif sample['type'] == 'DL-DATA':
+      last_dl_inds['blocks_list_ind'] = (len(blocks_list) - 1, len(blocks_list[-1]['blocks']) - 1)
 
   return jsonify({
     'blocks_arr': blocks_arr,
