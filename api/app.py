@@ -176,6 +176,13 @@ def get_resource_assignments(blocks):
                       sample['airtime'] = airtime[lost_sample['Resource Assignment']]
                       sample['HSFN'] = lost_sample['NPDCCH Timing HSFN']
                       sample['type'] = 'UL-DATA'
+
+                      total_bsr = 0
+                      for bsr in sample['Mac Hdr + CE']:
+                          if bsr['LC ID'] != 'S-BSR': continue
+                          total_bsr += bsr['BSR LCG 0']
+
+                      sample['total_BSR'] = total_bsr
                       found_samples.append(sample)
 
                       lost_sample['airtime'] = 1
