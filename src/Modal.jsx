@@ -29,7 +29,12 @@ function Modal({ ind, block }) {
       return (
         <div className="modal-list">
           {Object.entries(block).map(([key, value], i) => {
-            if (key !== "Mac Hdr + CE" && key !== "airtime" && key !== "type")
+            if (
+              key !== "Mac Hdr + CE" &&
+              key !== "airtime" &&
+              key !== "type" &&
+              key !== "tx-success"
+            )
               return (
                 <div key={i}>
                   {key}: {value}
@@ -70,13 +75,14 @@ function Modal({ ind, block }) {
       style={{
         backgroundColor: determineColor(),
         borderRight: "none",
-        color: determineColor() === "brown" && "white",
       }}
       className="modal-relevance"
       onMouseOver={handleHover}
       onMouseLeave={handleLeave}
     >
-      {type()}
+      <p style={{ color: determineColor() === "brown" && "white", margin: 0 }}>
+        {type()}
+      </p>
       {content}
     </td>
   );

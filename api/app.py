@@ -86,13 +86,12 @@ def get_resource_assignments(blocks):
                 # print("UPLINK")
                 for ind, lost_sample in enumerate(ul_samples_not_found[i]):
                   if (record['timestamp'] - lost_sample['timestamp']).seconds == 0:
-                    # lost_sample['Resource Assignment'] = record['Resource Assignment']
+
                     lost_sample['airtime'] = airtime[record['Resource Assignment']]
                     lost_sample['HSFN'] = record['NPDCCH Timing HSFN']
                     lost_sample['type'] = 'UL-DATA'
                     found_samples.append(lost_sample)
 
-                    # record['Resource Assignment'] = 0
                     record['airtime'] = 1
                     record['HSFN'] = record['NPDCCH Timing HSFN']
                     record['SFN'] = record['NPDCCH Timing SFN']
@@ -115,7 +114,7 @@ def get_resource_assignments(blocks):
                 # print("DOWNLINK")
                 for ind, lost_sample in enumerate(dl_samples_not_found[i]):
                   if (record['timestamp'] - lost_sample['timestamp']).seconds == 0:
-                    # lost_sample['Resource Assignment'] = record['Resource Assignment']
+
                     lost_sample['airtime'] = airtime[record['Resource Assignment']]
                     lost_sample['HSFN'] = record['NPDCCH Timing HSFN']
                     lost_sample['type'] = 'DL-DATA'
@@ -140,7 +139,7 @@ def get_resource_assignments(blocks):
                 break
 
           if record['UL Grant Present'] == 'True':
-            # means didn't find matching DL TRANSPORT BLOCK to this DCI record
+            # means didn't find matching UL TRANSPORT BLOCK to this DCI record
             if frame_num not in dci_ul_records_not_found:
               dci_ul_records_not_found[frame_num] = [record]
             else:

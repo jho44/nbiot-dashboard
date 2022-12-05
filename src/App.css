@@ -19,7 +19,6 @@
 }
 
 /* --------------------------------------------------------------------------- */
-
 .reserved-color {
   background-color: #ffe6ea;
 }
@@ -36,26 +35,26 @@
 #toggle-btn {
   position: sticky;
   top: 0px;
-  height: 300px;
+  height: 200px;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-items: center;
   background-color: rgb(161, 161, 255);
   border-radius: 5px;
   z-index: 10;
+  overflow-y: scroll;
 }
 
 thead {
   position: sticky;
-  top: 300px;
+  top: 200px;
   margin: 0 0 0 0;
   z-index: 10;
 }
 td {
   border-right: 1px solid #ccc;
   width: 160px !important;
-  height: 32px;
+  height: 39.5px;
   border-bottom: 1px solid #ccc;
 }
 tr {

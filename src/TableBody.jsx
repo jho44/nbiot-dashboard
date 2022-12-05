@@ -4,7 +4,7 @@ import throttle from "lodash.throttle";
 
 import Modal from "./Modal";
 
-const itemRowHeight = 32; // same height as each row (32px, see styles.css)
+const itemRowHeight = 39.5; // same height as each row (39.5px, see styles.css)
 const screenHeight = Math.max(
   document.documentElement.clientHeight,
   window.innerHeight || 0
@@ -95,6 +95,8 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
           const block = row[j];
           blockStart = blockStart > 0 && blockStart - 1;
           if (block !== null) {
+            if (block["HSFN"] === 429 && block["SFN"] === 219)
+              console.log(block);
             lastBlock = block;
             blockStart = block["airtime"];
             rowContents.push(<Modal ind={j} key={j} block={block} />);
