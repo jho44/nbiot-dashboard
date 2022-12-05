@@ -20,6 +20,10 @@
 
 /* --------------------------------------------------------------------------- */
 
+.reserved-color {
+  background-color: #ffe6ea;
+}
+
 #update-time-range-btn {
   margin-top: 1rem;
 }

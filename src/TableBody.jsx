@@ -101,7 +101,8 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
           } else if (blockStart) {
             rowContents.push(<Modal ind={j} key={j} block={lastBlock} />);
           } else {
-            rowContents.push(<td key={j}></td>);
+            if (j === 0) rowContents.push(<td key={j} className="reserved-color"/>)
+            else rowContents.push(<td key={j}></td>);
           }
         }
 
@@ -124,6 +125,7 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
               // if block's airtime transcends onto empty row, don't show that overflow
               // but if its airtime transcends onto non-empty row, then overflow
               rowContents.push(<Modal ind={k} key={k} block={lastBlock} />);
+            else if (k === 0) rowContents.push(<td key={k} className="reserved-color"/>)
             else rowContents.push(<td key={k}></td>);
             continue;
           }
@@ -141,6 +143,8 @@ const TableBody = ({ blocks, smallestInd, showEmpties }) => {
               block["HSFN"] * 1024 + block["SFN"] + 1
           ) {
             rowContents.push(<Modal ind={k} key={k} block={lastBlock} />);
+          } else if (k === 0) {
+            rowContents.push(<td key={k} className="reserved-color"/>)
           } else {
             rowContents.push(<td key={k}></td>);
           }

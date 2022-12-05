@@ -55,6 +55,13 @@ function Modal({ ind, block }) {
     return "brown";
   }
 
+  function type() {
+    if (ind === block["Sub-FN"]) {
+      if (ind === 0) return `${block["type"]} | BC`;
+      else return block["type"];
+    }
+  }
+
   return (
     <td
       style={{
@@ -66,7 +73,7 @@ function Modal({ ind, block }) {
       onMouseOver={handleHover}
       onMouseLeave={handleLeave}
     >
-      {ind === block["Sub-FN"] && block["type"]}
+      {type()}
       {content}
     </td>
   );
