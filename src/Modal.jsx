@@ -58,6 +58,9 @@ function Modal({ ind, block }) {
   function type() {
     if (ind === block["Sub-FN"]) {
       if (ind === 0) return `${block["type"]} | BC`;
+      else if (ind === 5) return `${block["type"]} | NPSS`;
+      else if (ind === 9 && block["SFN"] % 2 === 1)
+        return `${block["type"]} | NSSS`;
       else return block["type"];
     }
   }
