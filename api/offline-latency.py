@@ -21,12 +21,11 @@ def plot_graph(x, y, x_label, y_label, title):
     plt.xticks(rotation=45)
     plt.show()
 
-#Main function 
+#Main function
 def uplink_latency_analysis():
     src = OfflineReplayer()
     # src.set_input_path("./logs/latency_sample.mi2log")
     src.set_input_path(sys.argv[1])
-    print (sys.argv[1])
 
     analyzer = TestAnalyzer()
     analyzer.set_source(src)
@@ -40,7 +39,7 @@ def plot_dl(stats):
     num_dl_samples_matched = len(stats.found_dl_time_diffs)
     x_dl = stats.found_dl_times
 
-    print('Matched ' + str(len(x_dl)) + ' DL Samples to DCI Info Blocks')
+    # print('Matched ' + str(len(x_dl)) + ' DL Samples to DCI Info Blocks')
 
     plot_graph(x_dl, stats.dl_data_rates, 'DL Sample Timestamps', 'DL Data Rates (bits/ms)', 'DL Data Rates vs DL Sample Timestamps')
 
@@ -58,14 +57,14 @@ def plot_dl(stats):
 
     y = ([1] * num_dl_samples_matched) + ([0] * len(stats.dl_samples_not_found))
 
-    plot_graph(x_dl, y,'DL Sample Timestamps', 'DCI Info Match Success', 'DCI Info Match Success vs DL Sample Time')    
+    plot_graph(x_dl, y,'DL Sample Timestamps', 'DCI Info Match Success', 'DCI Info Match Success vs DL Sample Time')
 
 def plot_ul(stats):
 
     num_ul_samples_matched = len(stats.found_ul_time_diffs)
     x_ul = stats.found_ul_times
 
-    print('Matched ' + str(len(x_ul)) + ' UL Samples to DCI Info Blocks')
+    # print('Matched ' + str(len(x_ul)) + ' UL Samples to DCI Info Blocks')
 
     plot_graph(x_ul, stats.ul_data_rates, 'UL Sample Timestamps', 'UL Data Rates (bits/ms)', 'UL Data Rates vs UL Sample Timestamps')
 
@@ -82,7 +81,7 @@ def plot_ul(stats):
 
     y = ([1] * num_ul_samples_matched) + ([0] * len(stats.ul_samples_not_found))
 
-    plot_graph(x_ul, y,'UL Sample Timestamps', 'DCI Info Match Success', 'DCI Info Match Success vs UL Sample Time') 
+    plot_graph(x_ul, y,'UL Sample Timestamps', 'DCI Info Match Success', 'DCI Info Match Success vs UL Sample Time')
 
 #Program start
 stats = uplink_latency_analysis()
@@ -97,7 +96,7 @@ HSFN_high = 0 if len(sys.argv) <= 2 else int(sys.argv[5])
 upperbond = HSFN_high * 1024 + FN_high
 lowerbond = HSFN_low * 1024 + FN_low
 # print(len(sys.argv), FN_low, FN_high, HSFN_low, HSFN_high)
-    
+
 #params
 total_dl_bit = 0
 total_ul_bit = 0
@@ -111,11 +110,11 @@ for packet in stats.all_blocks:
     if packet['type_id'] == 'LTE_NB1_ML1_GM_DCI_Info':
         for record in packet['Records']:
             if record['NPDCCH Timing Sub FN'] in total_DCI_Sub_FN :
-                total_DCI_Sub_FN[record['NPDCCH Timing Sub FN']] += 1 
+                total_DCI_Sub_FN[record['NPDCCH Timing Sub FN']] += 1
             else:
                 total_DCI_Sub_FN[record['NPDCCH Timing Sub FN']] = 1
-            
-        print(packet,',')
+
+        # print(packet,',')
         continue
     if userinput:
         if lowerbond <= packet['HSFN'] * 1024 + packet['SFN']<= upperbond:
@@ -127,10 +126,10 @@ for packet in stats.all_blocks:
                 dl_NDI = packet['NDI']
                 total_dl_bit += 8*packet['DL TBS (bytes)']
                 if packet['Sub-FN'] in total_dl_Sub_FN :
-                    total_dl_Sub_FN[packet['Sub-FN']] += 1 
+                    total_dl_Sub_FN[packet['Sub-FN']] += 1
                 else:
                      total_dl_Sub_FN[packet['Sub-FN']] = 1
-                print(packet,',')
+                # print(packet,',')
             #uplink
             if packet['type_id'] == 'UL Transport Sample':
                 packet['transmission_condition'] = 1 if ul_NDI == -1 else (1 if packet['NDI'] != ul_NDI else 0)
@@ -138,10 +137,10 @@ for packet in stats.all_blocks:
                 for sample in packet['Mac Hdr + CE'] :
                     total_ul_bit += sample['BSR LCG 0 (bytes)'] if 'BSR LCG 0 (bytes)' in sample else 0
                 if packet['Sub-FN'] in total_ul_Sub_FN :
-                    total_ul_Sub_FN[packet['Sub-FN']] += 1 
+                    total_ul_Sub_FN[packet['Sub-FN']] += 1
                 else:
                      total_ul_Sub_FN[packet['Sub-FN']] = 1
-                print(packet,',')
+                # print(packet,',')
     else:
         lowerbond = min(lowerbond, packet['HSFN'] * 1024 + packet['SFN'])
         upperbond = max(upperbond, packet['HSFN'] * 1024 + packet['SFN'])
@@ -151,10 +150,10 @@ for packet in stats.all_blocks:
             dl_NDI = packet['NDI']
             total_dl_bit += 8*packet['DL TBS (bytes)']
             if packet['Sub-FN'] in total_dl_Sub_FN :
-                total_dl_Sub_FN[packet['Sub-FN']] += 1 
+                total_dl_Sub_FN[packet['Sub-FN']] += 1
             else:
                 total_dl_Sub_FN[packet['Sub-FN']] = 1
-            print(packet,',')
+            # print(packet,',')
         #uplink
         if packet['type_id'] == 'UL Transport Sample':
             packet['transmission_condition'] = 1 if ul_NDI == -1 else (1 if packet['NDI'] != ul_NDI else 0)
@@ -162,18 +161,18 @@ for packet in stats.all_blocks:
             for sample in packet['Mac Hdr + CE'] :
                 total_ul_bit += sample['BSR LCG 0 (bytes)'] if 'BSR LCG 0 (bytes)' in sample else 0
             if packet['Sub-FN'] in total_ul_Sub_FN :
-                total_ul_Sub_FN[packet['Sub-FN']] += 1 
+                total_ul_Sub_FN[packet['Sub-FN']] += 1
             else:
                 total_ul_Sub_FN[packet['Sub-FN']] = 1
-            print(packet,',')
+#             print(packet,',')
 
-print("total_dl_bit: ", total_dl_bit)
-print("Average DL thoughput: ", total_dl_bit/(upperbond - lowerbond))
-print("total_ul_bit: ", total_ul_bit)
-print("Average UL thoughput: ", total_ul_bit/(upperbond - lowerbond))
-print("total_dl_Sub_FN", total_dl_Sub_FN)
-print("total_ul_Sub_FN", total_ul_Sub_FN)
-print("total_DCI_Sub_FN", total_DCI_Sub_FN)
+# print("total_dl_bit: ", total_dl_bit)
+# print("Average DL thoughput: ", total_dl_bit/(upperbond - lowerbond))
+# print("total_ul_bit: ", total_ul_bit)
+# print("Average UL thoughput: ", total_ul_bit/(upperbond - lowerbond))
+# print("total_dl_Sub_FN", total_dl_Sub_FN)
+# print("total_ul_Sub_FN", total_ul_Sub_FN)
+# print("total_DCI_Sub_FN", total_DCI_Sub_FN)
 
 
 # plot_dl(stats)
@@ -193,10 +192,10 @@ for latency in stats.all_packets:
 total_latency = total_wait + total_trans + total_retx
 n = len(stats.all_packets)
 
-if (n > 0):
-  print ("Average latency is:", float(total_latency) / n)
-  print ("Average waiting latency is:", float(total_wait) / n)
-  print ("Average tx latency is:", float(total_trans) / n)
-  print ("Average retx latency is:", float(total_retx) / n)
-else:
-  print ("Certain message type(s) missing in the provided log.")
+# if (n > 0):
+#   print ("Average latency is:", float(total_latency) / n)
+#   print ("Average waiting latency is:", float(total_wait) / n)
+#   print ("Average tx latency is:", float(total_trans) / n)
+#   print ("Average retx latency is:", float(total_retx) / n)
+# else:
+#   print ("Certain message type(s) missing in the provided log.")

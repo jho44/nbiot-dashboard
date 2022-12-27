@@ -47,7 +47,7 @@ class TestAnalyzer(Analyzer):
         Analyzer.__init__(self)
         self.add_source_callback(self.__msg_callback)
 
-        # Timers 
+        # Timers
         self.fn = -1
         self.sfn = -1
 
@@ -90,14 +90,8 @@ class TestAnalyzer(Analyzer):
         self.ul_NDIs = [] # list of UL samples' NDI
         self.ul_tansmission_success = [0] # list of UL samples' transmission result
 
-        self.unmatched_DCI = []
-
-        self.all_blocks = []
-        
-        self.total_FNs = []
-        self.total_dl_bits = 0
-
-
+        self.dci_ul_unfound = [] # list of UL Samples listed in DCI Info Blocks which
+                                # did not have a match
 
     def set_source(self, source):
         """
@@ -142,36 +136,30 @@ class TestAnalyzer(Analyzer):
     def __print_buffer(self):
         pass
 
-    def dl_handler(self, record, frame_num, timestamp):
+    def dl_handler(self, record, frame_num, decoded_block):
         if record['RNTI Type'] != 'SI-RNTI':
 
             end_frame_num = frame_num + 10
-            hsfn = record['NPDCCH Timing HSFN']
-            ndi = record['NDI']
             if record['Scheduling Delay'] != 0:
                 end_frame_num += 10
                 self.dls_delayed.append(frame_num)
 
             for i in range(frame_num, end_frame_num):
                 if i in self.dl_samples_not_found:
-                    # print(self.dl_samples[i])
                     self.dl_match_distance.append(i - frame_num)
 
                     self.dl_samples_not_found.remove(i)
-                    self.dl_samples[i]['sample']['HSFN'] = hsfn
-                    self.dl_samples[i]['sample']['NDI'] = ndi
-                    self.all_blocks.append(self.dl_samples[i]['sample'])
                     self.found_dl_times.append(self.dl_samples[i]['time'])
                     self.dls_repeated_num_times.append(record['Repetition Number'])
-                    
-                    time_diff = timestamp - self.dl_samples[i]['time']
+
+                    time_diff = decoded_block['timestamp'] - self.dl_samples[i]['time']
                     self.found_dl_time_diffs.append(round(time_diff.total_seconds() * 1000))
-                    
+
                     if(len(self.dl_NDIs) != 0):
                         res_diff = 1 if self.dl_NDIs[-1] != record['NDI'] else 0
                         self.dl_tansmission_success.append(res_diff)
                     self.dl_NDIs.append(record['NDI'])
-                    
+
                     # find amt of data transmitted per ms at each matched DL's timestamp
                     transmit_time = record['Resource Assignment'] # how long DL transmission will take
 
@@ -185,47 +173,33 @@ class TestAnalyzer(Analyzer):
                     amt_data = tbs_table[record['MCS']][record['Resource Assignment']]
                     amt_data_per_ms = amt_data / transmit_time
                     self.dl_data_rates.append(amt_data_per_ms)
+                    break
 
-                    for record_buffer in self.unmatched_DCI:
-                        if record_buffer['NPDCCH Timing SFN'] * 10 + record_buffer['NPDCCH Timing Sub FN'] == frame_num:
-                            self.unmatched_DCI.remove(record_buffer)
-                            break
 
-                    return
-            record['timestamp'] = timestamp
-            self.unmatched_DCI.append(record)
-
-    
-    def ul_handler(self, record, frame_num, timestamp):
+    def ul_handler(self, record, frame_num, decoded_block):
         if record['RNTI Type'] != 'SI-RNTI':
 
             end_frame_num = frame_num + 10
-            hsfn = record['NPDCCH Timing HSFN']
-            ndi = record['NDI']
             if record['Scheduling Delay'] != 0:
                 end_frame_num += 10
                 self.uls_delayed.append(frame_num)
 
             for i in range(frame_num, end_frame_num):
                 if i in self.ul_samples_not_found:
-                    # print('----------------------------------------------------------------')
                     self.ul_match_distance.append(i - frame_num)
 
                     self.ul_samples_not_found.remove(i)
-                    self.ul_samples[i]['sample']['HSFN'] = hsfn
-                    self.ul_samples[i]['sample']['NDI'] = ndi
-                    self.all_blocks.append(self.ul_samples[i]['sample'])
                     self.found_ul_times.append(self.ul_samples[i]['time'])
                     self.uls_repeated_num_times.append(record['Repetition Number'])
-                    
-                    time_diff = timestamp - self.ul_samples[i]['time']
+
+                    time_diff = decoded_block['timestamp'] - self.ul_samples[i]['time']
                     self.found_ul_time_diffs.append(round(time_diff.total_seconds() * 1000))
-                    
+
                     if(len(self.ul_NDIs) != 0):
                         res_diff = 1 if self.ul_NDIs[-1] != record['NDI'] else 0
                         self.ul_tansmission_success.append(res_diff)
                     self.ul_NDIs.append(record['NDI'])
-                    
+
                     # find amt of data transmitted per ms at each matched UL's timestamp
                     transmit_time = record['Resource Assignment'] # how long UL transmission will take
 
@@ -239,53 +213,57 @@ class TestAnalyzer(Analyzer):
                     amt_data = tbs_table[record['MCS']][record['Resource Assignment']]
                     amt_data_per_ms = amt_data / transmit_time
                     self.ul_data_rates.append(amt_data_per_ms)
+                    break
 
-                    for record_buffer in self.unmatched_DCI:
-                        if record_buffer['NPDCCH Timing SFN'] * 10 + record_buffer['NPDCCH Timing Sub FN'] == frame_num:
-                            self.unmatched_DCI.remove(record_buffer)
-                            break
-                    return
-            record['timestamp'] = timestamp
-            self.unmatched_DCI.append(record)
-
+            # still couldn't find a match in UL Transport Blocks that
+            # came before this DCI Info Block so save it for future ref
 
     def __msg_callback(self, msg):
-    
+
         if msg.type_id == "LTE_NB1_ML1_GM_DCI_Info":
             decoded_block = msg.data.decode()
+            print(decoded_block)
             # print('##########################')
-            # print('DCI')
-            # print(decoded_block,",")
-            self.all_blocks.append(decoded_block)
+            # print(decoded_block['timestamp'])
+            # print(decoded_block)
             for record in decoded_block['Records']:
                 frame_num = record['NPDCCH Timing SFN'] * 10 + record['NPDCCH Timing Sub FN']
                 if record['UL Grant Present'] == 'True':
-                    self.ul_handler(record, frame_num, decoded_block['timestamp'])
-                    
+                    # print('LOOKING FOR UPLINK SAMPLE WITH FN WITHIN 10 OF ' + str(frame_num))
+
+                    self.ul_handler(record, frame_num, decoded_block)
+
                 else:
-                    self.dl_handler(record, frame_num, decoded_block['timestamp'])
+                    # print('LOOKING FOR DOWNLINK SAMPLE WITH FN WITHIN 10 OF ' + str(frame_num))
+
+                    self.dl_handler(record, frame_num, decoded_block)
             return
-    
+
 
         if msg.type_id == "LTE_MAC_DL_Transport_Block":
             decoded_block = msg.data.decode()
             # print('##########################')
             # print('DL')
-            
             self.save_packet(1, decoded_block)
+            print(decoded_block)
             return
-        
+
         if msg.type_id == "LTE_MAC_UL_Transport_Block":
             decoded_block = msg.data.decode()
             # print('##########################')
             # print('UL')
             self.save_packet(0, decoded_block)
+            print(decoded_block)
             return
-        
+
+        if msg.type_id == "LTE_NB1_ML1_GM_TX_Report":
+            decoded_block = msg.data.decode()
+            print(decoded_block)
+            return
+
         return
 
     def save_packet(self, up_or_downlink, decoded_block):
-        total_bsr = 0
         for packet in decoded_block['Subpackets']:
             for sample in packet['Samples']:
                 SFN = sample['Sub-FN']
@@ -293,53 +271,22 @@ class TestAnalyzer(Analyzer):
                 # print('\t' + str(FN * 10 + SFN))
 
                 if up_or_downlink == 0: # uplink
-                    bsr_list = []
-                    
-                    if('Mac Hdr + CE' in sample):
-                        for bsr in sample['Mac Hdr + CE']:
-                            if bsr['LC ID'] != 'S-BSR': continue
-                            total_bsr += bsr['BSR LCG 0']
-                            bsr_list.append(bsr['BSR LCG 0'])
-
-                    sample['type_id'] = 'UL Transport Sample'
                     self.ul_samples[FN * 10 + SFN] = {
                         'RNTI Type': sample['RNTI Type'],
-                        'time': decoded_block['timestamp'],
-                        'bsr_list': bsr_list,
-                        'sample': sample
+                        'time': decoded_block['timestamp']
                     }
+
+
                     self.ul_samples_not_found.add(FN * 10 + SFN)
-                    if len(self.unmatched_DCI) != 0:
-                        for record in self.unmatched_DCI:
-                            length_unmatch = len(self.unmatched_DCI)
-                            if record['UL Grant Present'] == 'True':
-                                frame_num = record['NPDCCH Timing SFN'] * 10 + record['NPDCCH Timing Sub FN']
-                                self.ul_handler(record, frame_num, record['timestamp'])
-                                if length_unmatch != len(self.unmatched_DCI):
-                                    break
                 else: # downlink
-                    sample['type_id'] = 'DL Transport Sample'
                     self.dl_samples[FN * 10 + SFN] = {
                         'RNTI Type': sample['RNTI Type'],
-                        'time': decoded_block['timestamp'],
-                        'sample': sample
+                        'time': decoded_block['timestamp']
                     }
                     self.dl_samples_not_found.add(FN * 10 + SFN)
-                    if len(self.unmatched_DCI) != 0:
-                        for record in self.unmatched_DCI:
-                            length_unmatch = len(self.unmatched_DCI)
-                            if record['DL Grant Present'] == 'True':
-                                frame_num = record['NPDCCH Timing SFN'] * 10 + record['NPDCCH Timing Sub FN']
-                                self.dl_handler(record, frame_num, record['timestamp'])
-                                if length_unmatch != len(self.unmatched_DCI):
-                                    break
-        
-        if(up_or_downlink == 0):
-            decoded_block['total_bsr'] = total_bsr
-        # print(decoded_block,",")
 
     def update_time(self, SFN, FN):
-        if self.sfn >= 0:      
+        if self.sfn >= 0:
             self.sfn += 1
             if self.sfn == 10:
                 self.sfn = 0
